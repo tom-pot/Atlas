@@ -1,0 +1,15 @@
+
+values: {{{ json }}}
+
+operations:
+- message: Hello world
+
+- message: get feed
+  request: vsts-feeds-get.yaml
+
+- message: list packages
+  values: 
+    quality: Release
+  request: vsts-feeds-packages-list.yaml
+  output:
+    packages: (value[].{ id:id, name:name, version:versions[?isLatest].version | [0] } )
