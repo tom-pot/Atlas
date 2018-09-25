@@ -9,7 +9,7 @@ operations:
   request: vsts-feeds-packages-list.yaml
   output:
     #packages: (value[].{ packageId:id, packageName:name, version:versions[?isLatest].version | [0]})
-    packages: (value[].{ packageId:id, packageName:name, version:versions[?isLatest && version=='{{vsts.version}}'].version | [0]}) # works but leaves non-match empty!
+    packages: ( value[].{ packageId:id, packageName:name, version:versions[?isLatest].version | [0]} | [?version=='{{vsts.version}}'] )
 
 #- message: filter packages
 #  values:
