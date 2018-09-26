@@ -1,0 +1,33 @@
+
+values: {{{ json }}}
+
+operations:
+- message: get feed
+  request: vsts-feeds-get.yaml
+
+- message: list packages
+  request: vsts-feeds-packages-list.yaml
+  output:
+    #packages: (value[].{ packageId:id, packageName:name, version:versions[?isLatest].version | [0]})
+    packages: ( value[].{ packageId:id, packageName:name, version:versions[?isLatest].version | [0]} | [?version=='{{vsts.version}}'] )
+
+#- message: filter packages
+#  values:
+#    current: (packages[])
+#  output:
+#    packages: (current[].{ packageId, packageName, version[?contains(@,'{{vsts.version}}') == `true`] })
+
+- values:
+    results: []
+    version: {{ vsts.version }}
+    current: (packages[0])
+    remaining: (packages[1:])
+  operations:
+  - message: (['promoting ', current.packageName, ' to ', vsts.quality])
+    # request: vsts-feeds-packages-versions-patch.yaml
+  output:
+    results: ([results, current][])
+    current: (remaining[0])
+    remaining: (remaining[1:])
+  repeat: # Iterating on all packages in the feed
+    condition: current != null
