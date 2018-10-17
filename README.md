@@ -12,8 +12,8 @@
 ----
 
 Atlas is a tool for automating the deployment, configuration, and maintenance of DevOps engineering systems. 
-It can be run interactively from the command line, or can be run entirely unattended as part of a VSTS build or release definition. 
-An Atlas workflow revolves around making the appropriate REST API calls to [VSTS][VSTS REST API], [Active Directory][Azure AD REST API], and [Azure Resource Manager][Azure RM REST API]. 
+It can be run interactively from the command line, or can be run entirely unattended as part of an Azure DevOps (formerly known as VSTS) build or release definition.
+An Atlas workflow revolves around making the appropriate REST API calls to [Azure DevOps][Azure DevOps REST API], [Active Directory][Azure AD REST API], and [Azure Resource Manager][Azure RM REST API]. 
 
 There is a REST API for everything. 
 With Atlas you can make the configuration of everything from CI/CD to production servers consistent, reproducible, and reviewable by capturing them as source controlled templates.
@@ -26,10 +26,10 @@ Atlas is currently under active development.
 
 Daily builds of the Atlas CLI are available as self-contained downloads:
 
-| Platform | [Master branch (0.1)][Master Branch] | [Latest build][Latest Json] |
+| Platform | [Master Branch (0.1)][Master Branch] | [Latest Build][Latest Json] |
 |:------:|:------:|:------:|
 | **Windows x64** | [Download latest zip][Zip Latest] | [![Zip Status]][Zip Latest] |
-| **Linux x64** | [Download latest tar.gz][Zip Latest] | [![Tarball Status]][Tarball Latest] |
+| **Linux x64** | [Download latest tar.gz][Tarball Latest] | [![Tarball Status]][Tarball Latest] |
 
 If you want to use a package manager:
 
@@ -44,9 +44,18 @@ If you want to use a package manager:
 
 ## Getting Started
 
-From a console window, `mkdir hello` to create a new subfolder.
+An existing workflow can be executed directly from a public web server. You 
+can run any of the [examples][Atlas Examples] in this repository with the `atlas deploy` command:
 
-Add a `hello/workflow.yaml` file to declare operations:
+```
+atlas deploy https://github.com/Microsoft/Atlas/tree/master/examples/101-messages
+```
+
+#### Creating a new workflow
+
+To create a new workflow, from a console window execute `mkdir demo` to create a new subfolder.
+
+Add a `demo/workflow.yaml` file to declare operations:
 
 ```
 operations:
@@ -55,7 +64,7 @@ operations:
 - message: "All values: {{ json . }}"
 ```
 
-Add a `hello/values.yaml` file to declare defaults:
+Add a `demo/values.yaml` file to declare defaults:
 
 ```
 info:
@@ -66,7 +75,7 @@ info:
 Run it!
 
 ```
-> atlas deploy hello --set info.name=Atlas
+> atlas deploy demo --set info.name=Atlas
 
 Atlas
 
@@ -77,7 +86,9 @@ Atlas
   - All values: {"info": {"greeting": "Hello", "name": "Atlas"}}
 ```
 
-Clone the [Atlas Examples](https://github.com/Microsoft/Atlas/tree/master/examples) folder to see additional
+#### Exploring the examples
+
+You can also clone the Atlas GitHub repo to explore the [examples][Atlas Examples] and see
 kinds of operations Atlas can perform.
 
 ```
@@ -96,11 +107,11 @@ atlas deploy 101-messages
 
 * Works cross-platform as a .NET Core executable
 
-* Invokes any [Azure RM][Azure RM REST API], [Azure AD][Azure AD REST API], or [VSTS][VSTS REST API] REST API 
+* Invokes any [Azure RM][Azure RM REST API], [Azure AD][Azure AD REST API], or [Azure DevOps][Azure DevOps REST API] REST API 
 
 * From the command line, REST API calls are secured via interactive Active Directory login, similar to `az login`
 
-* From a VSTS build or release definition, REST API calls are secured via [VSTS service connection to Azure](https://docs.microsoft.com/en-us/vsts/pipelines/library/service-endpoints?view=vsts)
+* From an Azure DevOps build or release definition, REST API calls are secured via [Azure DevOps service connection to Azure](https://docs.microsoft.com/en-us/vsts/pipelines/library/service-endpoints?view=vsts)
 
 * Renders output values and additional templated files to a target folder
 
@@ -114,7 +125,7 @@ atlas deploy 101-messages
 
 * Does not allow arbitrary code or command-line execution in order to limit what can be done to the machine executing a workflow
 
-* Currently designed for Active Directory authentication for Azure and VSTS resources
+* Currently designed for Active Directory authentication for Azure and Azure DevOps resources
 
 * Not yet available as a class library package
 
@@ -124,7 +135,7 @@ atlas deploy 101-messages
 
 * Establishing a repository for collaboration on common in-progress and stable workflows, and default location for common workflows
 
-* Shared workflows for larger scenarios, e.g. ASP.NET Core services on Kubernetes with VSTS CI/CD, Azure VM clusters, Azure DNS, ATM, and ALB for geo-redundant load balancing and service routing
+* Shared workflows for larger scenarios, e.g. ASP.NET Core services on Kubernetes with Azure DevOps CI/CD, Azure VM clusters, Azure DNS, ATM, and ALB for geo-redundant load balancing and service routing
 
 ----
 
@@ -147,6 +158,15 @@ To clone and build from source, run the following commands from a console window
 git clone https://github.com/Microsoft/Atlas.git
 cd Atlas
 build.cmd *or* ./build.sh
+```
+
+#### Running Atlas from source
+
+To run locally from source, run the following commands:
+
+```
+dotnet restore
+./atlas.sh
 ```
 
 ## Contributing
@@ -174,13 +194,14 @@ email to ensure we received your original message. Further information, includin
 the [Security TechCenter](https://technet.microsoft.com/en-us/security/default).
 
 [Atlas Logo]: https://github.com/Microsoft/Atlas/raw/master/docs/icon-128.png
+[Atlas Examples]: https://github.com/Microsoft/Atlas/tree/master/examples
 [Handlebars]: http://handlebarsjs.com/
 [YAML]: http://yaml.org/
 [JSON]: http://json.org/
 [JMESPath]: http://jmespath.org/
 [Azure RM REST API]: https://docs.microsoft.com/en-us/rest/api/azure/
 [Azure AD REST API]: https://docs.microsoft.com/en-us/rest/api/graphrbac/
-[VSTS REST API]: https://docs.microsoft.com/en-us/rest/api/vsts/?view=vsts-rest-5.0
+[Azure DevOps REST API]: https://docs.microsoft.com/en-us/rest/api/vsts/?view=vsts-rest-5.0
 [Build Status]: https://msasg.visualstudio.com/Falcon/_apis/build/status/Atlas-CI?branch=master
 [Build Latest]: https://msasg.visualstudio.com/Falcon/_build/latest?definitionId=6598&branch=master
 [Choco Status]: https://img.shields.io/myget/atlas-ci/vpre/atlas-cli.svg?label=choco

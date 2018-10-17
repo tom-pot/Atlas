@@ -8,15 +8,15 @@ operations:
     tenant: {{azure.tenant}}
   request: azure-tenants-list.yaml
   output:
-    tenants: (value[].{ tenantId:tenantId })
+    tenants: (result.body.value[].{ tenantId:tenantId })
 
 - message: (['Looking at tenant ', current.tenantId])
   values:
-    results: []
+    tenants: []
     current: (tenants[0])
     remaining: (tenants[1:])
   output:
-    results: ([results, current][])
+    tenants: ([tenants, current][])
     current: (remaining[0])
     remaining: (remaining[1:])
   repeat:
@@ -29,7 +29,7 @@ operations:
     request: graph-me-get.yaml
     output:
       current:
-        user: ({ "odata.type":"odata.type", objectId:objectId, displayName:displayName, userPrincipalName:userPrincipalName, otherMails:otherMails })
+        user: (result.body.{ "odata.type":"odata.type", objectId:objectId, displayName:displayName, userPrincipalName:userPrincipalName, otherMails:otherMails })
 
   - message: Listing Active Directory domains, see https://docs.microsoft.com/en-us/rest/api/graphrbac/domains/list
     values:
@@ -37,7 +37,7 @@ operations:
     request: graph-domains-list.yaml
     output:
       current:
-        domains: (value[].name)
+        domains: (result.body.value[].name)
 
   - message: Listing Microsoft Azure subscriptions, see https://docs.microsoft.com/en-us/rest/api/resources/subscriptions/list
     values:
@@ -45,8 +45,11 @@ operations:
     request: azure-subscriptions-list.yaml
     output:
       current:
-        subscriptions: (value[].{ subscriptionId:subscriptionId, displayName:displayName })
+        subscriptions: (result.body.value[].{ subscriptionId:subscriptionId, displayName:displayName })
 
-output: 
-  details: (results)
-  subscriptions: (results[].subscriptions[].[displayName, ' (', subscriptionId, ')'].join('',@))
+- message: Arranging selection of azure.tenant and azure.subscription
+  template: selection.yaml
+  write: selection.yaml
+  output:
+    selection: (result)
+  

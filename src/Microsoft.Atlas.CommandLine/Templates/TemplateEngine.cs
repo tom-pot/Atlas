@@ -12,6 +12,7 @@ using DevLab.JmesPath;
 using DevLab.JmesPath.Functions;
 using HandlebarsDotNet;
 using HandlebarsDotNet.Compiler;
+using Microsoft.Atlas.CommandLine.Queries;
 using Microsoft.Atlas.CommandLine.Templates.FileSystems;
 using Microsoft.Atlas.CommandLine.Templates.TextWriters;
 
@@ -32,6 +33,7 @@ namespace Microsoft.Atlas.CommandLine.Templates
                 {
                     { "query", QueryHelper },
                     { "json", JsonHelper },
+                    { "yaml", YamlHelper },
                     { "guid", GuidHelper },
                     { "datetime", DateTimeHelper },
                     { "secret", SecretHelper },
@@ -230,6 +232,32 @@ namespace Microsoft.Atlas.CommandLine.Templates
             }
         }
 
+        private void YamlHelper(TextWriter output, object context, object[] arguments)
+        {
+            var indent = 0;
+            if (arguments.Length == 0)
+            {
+                output.Write(ToYamlString(context, indent));
+            }
+            else
+            {
+                var yaml = arguments.FirstOrDefault(argument => argument != null && argument.GetType().Name != "UndefinedBindingResult");
+
+                var options = arguments.Last() as IDictionary<string, object>;
+                if (options != null)
+                {
+                    if (options.TryGetValue("indent", out var indentOption))
+                    {
+                        indent = int.Parse(indentOption?.ToString());
+                        output.Write(ToYamlString(yaml, indent));
+                        return;
+                    }
+
+                    throw new ApplicationException("Unknown options");
+                }
+            }
+        }
+
         private void QueryHelper(TextWriter output, object context, object[] arguments)
         {
             var transformObject = QueryCore(context, arguments);
@@ -282,20 +310,53 @@ namespace Microsoft.Atlas.CommandLine.Templates
             var query = string.Format(formatString, args: formatArguments.ToArray());
             var json = arguments.OfType<HashParameterDictionary>().SingleOrDefault() ?? (object)context;
 
-            var jmespath = new JmesPath();
-            jmespath.FunctionRepository
-                .Register<ItemsFunction>()
-                .Register<ToObjectFunction>()
-                .Register<ZipFunction>();
-
-            var token = Services.Serializers.JTokenTranserializer(json);
-            var transformOutput = jmespath.Transform(token, query);
-            var transformObject = Services.Serializers.YamlDeserializer.Deserialize<object>(transformOutput.ToString());
+            var transformObject = Services.JmesPathQuery.Search(query, json);
 
             return transformObject;
         }
 
-        private string ToJsonString(object jsonObject) => jsonObject == null ? "null" : Services.Serializers.JsonSerializer.Serialize(jsonObject)?.TrimEnd('\r', '\n');
+        private string ToJsonString(object jsonObject)
+        {
+            if (jsonObject == null)
+            {
+                return "null";
+            }
+
+            if (jsonObject is int jsonInt)
+            {
+                return jsonInt.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            if (jsonObject is bool jsonBool)
+            {
+                return jsonBool ? "true" : "false";
+            }
+
+            return Services.Serializers.JsonSerializer.Serialize(jsonObject)?.TrimEnd('\r', '\n');
+        }
+
+        private string ToYamlString(object yamlObject, int indent)
+        {
+            if (yamlObject == null)
+            {
+                return "null";
+            }
+
+            if (yamlObject is int yamlInt)
+            {
+                return yamlInt.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            if (yamlObject is bool yamlBool)
+            {
+                return yamlBool ? "true" : "false";
+            }
+
+            var serializedYaml = Services.Serializers.YamlSerializer.Serialize(yamlObject).TrimEnd('\r', '\n');
+            return serializedYaml.Split(Environment.NewLine, StringSplitOptions.None)
+                                 .Select(line => Environment.NewLine + new string(' ', indent) + line)
+                                 .Aggregate((currentLine, nextLine) => currentLine + nextLine);
+        }
 
         private class SimpleEncoder : ITextEncoder
         {
